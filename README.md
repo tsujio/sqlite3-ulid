@@ -127,6 +127,16 @@ sqlite> .load ./libsqlite-ulid
 sqlite> SELECT ULID_NEW();
 ```
 
+# Build
+
+```
+git clone --recursive https://github.com/tsujio/sqlite3-ulid.git
+
+cd sqlite3-ulid
+
+make
+```
+
 # References
 
 - SQLite
