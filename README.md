@@ -114,8 +114,8 @@ SELECT ULID_DECODE('01GMSQJHVQ9JCDN0P4WXYQR5WC');
 SQLite command line example:
 
 ```
-# Get extension from release
-wget https://github.com/tsujio/sqlite3-ulid/releases/download/v1.0.0/libsqlite-ulid-1.0.0.so -O libsqlite-ulid.so
+# Get extension from release (choose suitable version for your environment)
+wget https://github.com/tsujio/sqlite3-ulid/releases/download/v1.0.0/libsqlite-ulid-1.0.0-linux-x86_64.so -O libsqlite-ulid.so
 
 # Start SQLite cli
 sqlite3 :memory:
