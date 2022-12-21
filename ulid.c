@@ -42,7 +42,7 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
 
     if (argc > 0) {
         if (sqlite3_value_type(argv[0]) != SQLITE_INTEGER) {
-            sqlite3_result_error(context, "INTEGER value expected for timestamp", -1);
+            sqlite3_result_error(context, "[ULID_NEW] INTEGER value expected for timestamp", -1);
             return;
         }
 
@@ -51,7 +51,7 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
 #ifdef __linux__
         struct timespec ts;
         if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
-            sqlite3_result_error(context, "Internal error: failed to get current time", -1);
+            sqlite3_result_error(context, "[ULID_NEW] Internal error: failed to get current time", -1);
             return;
         }
         timestamp = (unsigned long long)ts.tv_sec * 1000 + (unsigned long long)ts.tv_nsec / (1000 * 1000);
@@ -62,12 +62,12 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
 
     if (argc > 1) {
         if (sqlite3_value_type(argv[1]) != SQLITE_BLOB) {
-            sqlite3_result_error(context, "BLOB value expected for randomness", -1);
+            sqlite3_result_error(context, "[ULID_NEW] BLOB value expected for randomness", -1);
             return;
         }
 
         if (sqlite3_value_bytes(argv[1]) < RANDOMNESS_BYTE_LEN) {
-            sqlite3_result_error(context, "Invalid byte length for randomness", -1);
+            sqlite3_result_error(context, "[ULID_NEW] Invalid byte length for randomness", -1);
             return;
         }
 
@@ -76,7 +76,7 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
     } else {
 #ifdef __linux__
         if (getrandom(randomness, RANDOMNESS_BYTE_LEN, GRND_RANDOM) != RANDOMNESS_BYTE_LEN) {
-            sqlite3_result_error(context, "Internal error: failed to get random bytes", -1);
+            sqlite3_result_error(context, "[ULID_NEW] Internal error: failed to get random bytes", -1);
             return;
         }
 #else
@@ -103,17 +103,17 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
 
 static void ulid_encode(sqlite3_context *context, int argc, sqlite3_value **argv) {
     if (argc == 0) {
-        sqlite3_result_error(context, "Argument required", -1);
+        sqlite3_result_error(context, "[ULID_ENCODE] No argument", -1);
         return;
     }
 
     if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "BLOB value expected", -1);
+        sqlite3_result_error(context, "[ULID_ENCODE] BLOB value expected", -1);
         return;
     }
 
     if (sqlite3_value_bytes(argv[0]) != ULID_BYTE_LEN) {
-        sqlite3_result_error(context, "Invalid byte length", -1);
+        sqlite3_result_error(context, "[ULID_ENCODE] Invalid byte length", -1);
         return;
     }
 
@@ -156,17 +156,17 @@ static void ulid_encode(sqlite3_context *context, int argc, sqlite3_value **argv
 
 static void ulid_decode(sqlite3_context *context, int argc, sqlite3_value **argv) {
     if (argc == 0) {
-        sqlite3_result_error(context, "Argument required", -1);
+        sqlite3_result_error(context, "[ULID_DECODE] No argument", -1);
         return;
     }
 
     if (sqlite3_value_type(argv[0]) != SQLITE_TEXT) {
-        sqlite3_result_error(context, "TEXT value expected", -1);
+        sqlite3_result_error(context, "[ULID_DECODE] TEXT value expected", -1);
         return;
     }
 
     if (sqlite3_value_bytes(argv[0]) != ULID_STR_LEN) {
-        sqlite3_result_error(context, "Invalid text length", -1);
+        sqlite3_result_error(context, "[ULID_DECODE] Invalid text length", -1);
         return;
     }
 
