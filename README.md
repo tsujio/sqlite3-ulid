@@ -1,6 +1,13 @@
 # sqlite3-ulid
 An extension for SQLite3 to use ULID
 
+| OS      | Supported |
+| ------- | --------- |
+| Linux   | Yes       |
+| Windows | No (TODO) |
+| Mac     | No (TODO) |
+| FreeBSD | No (TODO) |
+
 ## Functions
 
 ### `ULID_NEW`
