@@ -38,7 +38,16 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
 
         timestamp = sqlite3_value_int64(argv[0]);
     } else {
+#ifdef __linux__
+        struct timespec ts;
+        if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+            sqlite3_result_error(context, "Internal error: failed to get current time", -1);
+            return;
+        }
+        timestamp = (unsigned long long)ts.tv_sec * 1000 + (unsigned long long)ts.tv_nsec / (1000 * 1000);
+#else
         timestamp = (unsigned long long)time(NULL) * 1000;
+#endif
     }
 
     if (argc > 1) {
