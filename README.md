@@ -10,6 +10,10 @@ An extension for SQLite3 to use ULID
 
 ## Functions
 
+- [ULID_NEW](#ulid_new)
+- [ULID_ENCODE](#ulid_encode)
+- [ULID_DECODE](#ulid_decode)
+
 ### `ULID_NEW`
 
 Generate new ulid value
