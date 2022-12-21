@@ -10,6 +10,11 @@
  
 SQLITE_EXTENSION_INIT1
 
+#define TIMESTAMP_BYTE_LEN 6
+#define RANDOMNESS_BYTE_LEN 10
+#define ULID_BYTE_LEN (TIMESTAMP_BYTE_LEN + RANDOMNESS_BYTE_LEN)
+#define ULID_STR_LEN 26
+
 static char *ENCODE = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
 static unsigned char DECODE[128] = {
@@ -33,7 +38,7 @@ static unsigned char DECODE[128] = {
 
 static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
     unsigned long long timestamp;
-    unsigned char randomness[10];
+    unsigned char randomness[RANDOMNESS_BYTE_LEN];
 
     if (argc > 0) {
         if (sqlite3_value_type(argv[0]) != SQLITE_INTEGER) {
@@ -61,28 +66,28 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
             return;
         }
 
-        if (sqlite3_value_bytes(argv[1]) != 10) {
+        if (sqlite3_value_bytes(argv[1]) < RANDOMNESS_BYTE_LEN) {
             sqlite3_result_error(context, "Invalid byte length for randomness", -1);
             return;
         }
 
         const unsigned char *value = sqlite3_value_blob(argv[1]);
-        memcpy(randomness, value, 10);
+        memcpy(randomness, value, RANDOMNESS_BYTE_LEN);
     } else {
 #ifdef __linux__
-        if (getrandom(randomness, 10, GRND_RANDOM) != 10) {
+        if (getrandom(randomness, RANDOMNESS_BYTE_LEN, GRND_RANDOM) != RANDOMNESS_BYTE_LEN) {
             sqlite3_result_error(context, "Internal error: failed to get random bytes", -1);
             return;
         }
 #else
         int i;
-        for (i = 0; i < 10; i++) {
+        for (i = 0; i < RANDOMNESS_BYTE_LEN; i++) {
             randomness[i] = rand() & 0xff;
         }
 #endif
     }
 
-    unsigned char result[16] = {
+    unsigned char result[ULID_BYTE_LEN] = {
         (unsigned char)((timestamp >> 40) & 0xff),
         (unsigned char)((timestamp >> 32) & 0xff),
         (unsigned char)((timestamp >> 24) & 0xff),
@@ -91,9 +96,9 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
         (unsigned char)((timestamp >> 0) & 0xff),
     };
 
-    memcpy(result + 6, randomness, 10);
+    memcpy(result + TIMESTAMP_BYTE_LEN, randomness, RANDOMNESS_BYTE_LEN);
 
-    sqlite3_result_blob(context, result, 16, SQLITE_TRANSIENT);
+    sqlite3_result_blob(context, result, ULID_BYTE_LEN, SQLITE_TRANSIENT);
 }
 
 static void ulid_encode(sqlite3_context *context, int argc, sqlite3_value **argv) {
@@ -107,14 +112,14 @@ static void ulid_encode(sqlite3_context *context, int argc, sqlite3_value **argv
         return;
     }
 
-    if (sqlite3_value_bytes(argv[0]) != 16) {
+    if (sqlite3_value_bytes(argv[0]) != ULID_BYTE_LEN) {
         sqlite3_result_error(context, "Invalid byte length", -1);
         return;
     }
 
     const unsigned char *value = sqlite3_value_blob(argv[0]);
 
-    char result[26] = {
+    char result[ULID_STR_LEN] = {
         // Timestamp
         ENCODE[(value[0] & 224) >> 5],
         ENCODE[(value[0] & 31)],
@@ -146,7 +151,7 @@ static void ulid_encode(sqlite3_context *context, int argc, sqlite3_value **argv
         ENCODE[(value[15] & 31)],
     };
  
-    sqlite3_result_text(context, result, 26, SQLITE_TRANSIENT);
+    sqlite3_result_text(context, result, ULID_STR_LEN, SQLITE_TRANSIENT);
 }
 
 static void ulid_decode(sqlite3_context *context, int argc, sqlite3_value **argv) {
@@ -160,36 +165,36 @@ static void ulid_decode(sqlite3_context *context, int argc, sqlite3_value **argv
         return;
     }
 
-    if (sqlite3_value_bytes(argv[0]) != 26) {
+    if (sqlite3_value_bytes(argv[0]) != ULID_STR_LEN) {
         sqlite3_result_error(context, "Invalid text length", -1);
         return;
     }
 
     const char *value = sqlite3_value_text(argv[0]);
 
-    unsigned char result[16] = {
+    unsigned char result[ULID_BYTE_LEN] = {
         // Timestamp
-        ((DECODE[value[0]] << 5) | DECODE[value[1]]) & 0xff,
-        ((DECODE[value[2]] << 3) | (DECODE[value[3]] >> 2)) & 0xff,
-        ((DECODE[value[3]] << 6) | (DECODE[value[4]] << 1) | (DECODE[value[5]] >> 4)) & 0xff,
-        ((DECODE[value[5]] << 4) | (DECODE[value[6]] >> 1)) & 0xff,
-        ((DECODE[value[6]] << 7) | (DECODE[value[7]] << 2) | (DECODE[value[8]] >> 3)) & 0xff,
-        ((DECODE[value[8]] << 5) | (DECODE[value[9]])) & 0xff,
+        ((DECODE[value[0] & 127] << 5) | DECODE[value[1] & 127]) & 0xff,
+        ((DECODE[value[2] & 127] << 3) | (DECODE[value[3] & 127] >> 2)) & 0xff,
+        ((DECODE[value[3] & 127] << 6) | (DECODE[value[4] & 127] << 1) | (DECODE[value[5] & 127] >> 4)) & 0xff,
+        ((DECODE[value[5] & 127] << 4) | (DECODE[value[6] & 127] >> 1)) & 0xff,
+        ((DECODE[value[6] & 127] << 7) | (DECODE[value[7] & 127] << 2) | (DECODE[value[8] & 127] >> 3)) & 0xff,
+        ((DECODE[value[8] & 127] << 5) | (DECODE[value[9] & 127])) & 0xff,
 
         // Randomness
-        ((DECODE[value[10]] << 3) | (DECODE[value[11]] >> 2)) & 0xff,
-        ((DECODE[value[11]] << 6) | (DECODE[value[12]] << 1) | (DECODE[value[13]] >> 4)) & 0xff,
-        ((DECODE[value[13]] << 4) | (DECODE[value[14]] >> 1)) & 0xff,
-        ((DECODE[value[14]] << 7) | (DECODE[value[15]] << 2) | (DECODE[value[16]] >> 3)) & 0xff,
-        ((DECODE[value[16]] << 5) | (DECODE[value[17]])) & 0xff,
-        ((DECODE[value[18]] << 3) | (DECODE[value[19]] >> 2)) & 0xff,
-        ((DECODE[value[19]] << 6) | (DECODE[value[20]] << 1) | (DECODE[value[21]] >> 4)) & 0xff,
-        ((DECODE[value[21]] << 4) | (DECODE[value[22]] >> 1)) & 0xff,
-        ((DECODE[value[22]] << 7) | (DECODE[value[23]] << 2) | (DECODE[value[24]] >> 3)) & 0xff,
-        ((DECODE[value[24]] << 5) | (DECODE[value[25]])) & 0xff,
+        ((DECODE[value[10] & 127] << 3) | (DECODE[value[11] & 127] >> 2)) & 0xff,
+        ((DECODE[value[11] & 127] << 6) | (DECODE[value[12] & 127] << 1) | (DECODE[value[13] & 127] >> 4)) & 0xff,
+        ((DECODE[value[13] & 127] << 4) | (DECODE[value[14] & 127] >> 1)) & 0xff,
+        ((DECODE[value[14] & 127] << 7) | (DECODE[value[15] & 127] << 2) | (DECODE[value[16] & 127] >> 3)) & 0xff,
+        ((DECODE[value[16] & 127] << 5) | (DECODE[value[17] & 127])) & 0xff,
+        ((DECODE[value[18] & 127] << 3) | (DECODE[value[19] & 127] >> 2)) & 0xff,
+        ((DECODE[value[19] & 127] << 6) | (DECODE[value[20] & 127] << 1) | (DECODE[value[21] & 127] >> 4)) & 0xff,
+        ((DECODE[value[21] & 127] << 4) | (DECODE[value[22] & 127] >> 1)) & 0xff,
+        ((DECODE[value[22] & 127] << 7) | (DECODE[value[23] & 127] << 2) | (DECODE[value[24] & 127] >> 3)) & 0xff,
+        ((DECODE[value[24] & 127] << 5) | (DECODE[value[25] & 127])) & 0xff,
     };
 
-    sqlite3_result_blob(context, result, 16, SQLITE_TRANSIENT);
+    sqlite3_result_blob(context, result, ULID_BYTE_LEN, SQLITE_TRANSIENT);
 }
 
 #ifdef _WIN32
