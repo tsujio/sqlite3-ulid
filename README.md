@@ -1,20 +1,30 @@
 # sqlite3-ulid
+
 An extension for SQLite3 to use ULID
 
-| OS      | Supported |
-| ------- | --------- |
-| Linux   | Yes       |
-| Windows | No (TODO) |
-| Mac     | No (TODO) |
-| FreeBSD | No (TODO) |
+```
+$ sqlite3 :memory:
 
-## Functions
+sqlite> .load ./libsqlite-ulid
+
+sqlite> SELECT ULID_ENCODE(ULID_NEW());
+01GMTD49PVS01C9DFCWKPF71VK
+
+sqlite> WITH
+   ...> t AS (
+   ...>   SELECT ULID_NEW() AS id
+   ...> )
+   ...> SELECT ULID_DECODE(ULID_ENCODE(id)) = id FROM t;
+1
+```
+
+# Functions
 
 - [ULID_NEW](#ulid_new)
 - [ULID_ENCODE](#ulid_encode)
 - [ULID_DECODE](#ulid_decode)
 
-### `ULID_NEW`
+## `ULID_NEW`
 
 Generate new ulid value
 
@@ -49,7 +59,7 @@ SELECT ULID_NEW(STRFTIME('%s') * 1000);
 SELECT ULID_NEW(STRFTIME('%s') * 1000, RANDOMBLOB(10));
 ```
 
-### `ULID_ENCODE`
+## `ULID_ENCODE`
 
 Encode ulid to string format
 
@@ -74,7 +84,7 @@ Example:
 SELECT ULID_ENCODE(ULID_NEW());
 ```
 
-### `ULID_DECODE`
+## `ULID_DECODE`
 
 Decode string encoded ulid to byte array format
 
@@ -101,32 +111,19 @@ SELECT ULID_DECODE('01GMSQJHVQ9JCDN0P4WXYQR5WC');
 
 # Use extension
 
-## Build
-
-```
-# Clone repository (including submodules)
-git clone --recursive https://github.com/tsujio/sqlite3-ulid
-
-cd sqlite3-ulid
-
-make
-
-# Now you can find the extension library (libsqlite-ulid.so) in the working directory
-ls libsqlite-ulid.so
-```
-
-## Load
-
 SQLite command line example:
 
 ```
+# Get extension from release
+wget https://github.com/tsujio/sqlite3-ulid/releases/download/v1.0.0/libsqlite-ulid-1.0.0.so -O libsqlite-ulid.so
+
 # Start SQLite cli
-sqlite3 db.sqlite
+sqlite3 :memory:
 
-# Please replace 'path/to' to your environment
-sqlite> .load path/to/libsqlite-ulid
+# Load extension ('.so' is not needed)
+sqlite> .load ./libsqlite-ulid
 
-# You can use extension functions
+# You can use functions in extension
 sqlite> SELECT ULID_NEW();
 ```
 
