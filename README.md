@@ -21,15 +21,19 @@ Generate new ulid value
 Syntax:
 
 ```
+ULID_NEW() => BLOB
+
+ULID_NEW(INTEGER timestamp) => BLOB
+
 ULID_NEW(INTEGER timestamp, BLOB randomness) => BLOB
 ```
 
 Parameters:
 
 - `timestamp: INTEGER`
-    - Unix epoch in milliseconds
+    - Unix epoch in milliseconds. If omitted, current time is used
 - `randomness: BLOB`
-    - Random byte array that has at least 10 bytes
+    - Byte array for randomness that has at least 10 bytes. If omitted, random value is used
 
 Returns:
 
@@ -38,6 +42,10 @@ Returns:
 Example:
 
 ```
+SELECT ULID_NEW();
+
+SELECT ULID_NEW(STRFTIME('%s') * 1000);
+
 SELECT ULID_NEW(STRFTIME('%s') * 1000, RANDOMBLOB(10));
 ```
 
