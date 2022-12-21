@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#ifdef __linux__
+#include <sys/random.h>
+#endif
+
 #include "sqlite3ext.h"
  
 SQLITE_EXTENSION_INIT1
@@ -64,10 +69,17 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
         const unsigned char *value = sqlite3_value_blob(argv[1]);
         memcpy(randomness, value, 10);
     } else {
+#ifdef __linux__
+        if (getrandom(randomness, 10, GRND_RANDOM) != 10) {
+            sqlite3_result_error(context, "Internal error: failed to get random bytes", -1);
+            return;
+        }
+#else
         int i;
         for (i = 0; i < 10; i++) {
             randomness[i] = rand() & 0xff;
         }
+#endif
     }
 
     unsigned char result[16] = {
