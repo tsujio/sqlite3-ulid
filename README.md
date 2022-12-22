@@ -18,6 +18,13 @@ sqlite> WITH
 1
 ```
 
+# Download
+
+| OS | URL |
+| -- | --- |
+| Linux (x86_64) | https://github.com/tsujio/sqlite3-ulid/releases/download/v1.2.0/libsqlite-ulid-1.2.0-linux-x86_64.so |
+| Windows (x64) | https://github.com/tsujio/sqlite3-ulid/releases/download/v1.2.0/libsqlite-ulid-1.2.0-windows-x64.dll |
+
 # Functions
 
 - [ULID_NEW](#ulid_new)
