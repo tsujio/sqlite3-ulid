@@ -6,6 +6,11 @@
 #include <sys/random.h>
 #endif
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#include <bcrypt.h>
+#endif
+
 #include "sqlite3ext.h"
  
 SQLITE_EXTENSION_INIT1
@@ -55,6 +60,13 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
             return;
         }
         timestamp = (unsigned long long)ts.tv_sec * 1000 + (unsigned long long)ts.tv_nsec / (1000 * 1000);
+#elif defined(_WIN32) || defined(_WIN64)
+        FILETIME ft;
+        GetSystemTimeAsFileTime(&ft);
+        ULARGE_INTEGER t;
+        t.HighPart = ft.dwHighDateTime;
+        t.LowPart = ft.dwLowDateTime;
+        timestamp = (t.QuadPart - 116444736000000000ULL) / (10 * 1000);
 #else
         timestamp = (unsigned long long)time(NULL) * 1000;
 #endif
@@ -76,6 +88,11 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
     } else {
 #ifdef __linux__
         if (getrandom(randomness, RANDOMNESS_BYTE_LEN, GRND_RANDOM) != RANDOMNESS_BYTE_LEN) {
+            sqlite3_result_error(context, "[ULID_NEW] Internal error: failed to get random bytes", -1);
+            return;
+        }
+#elif defined(_WIN32) || defined(_WIN64)
+        if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, randomness, RANDOMNESS_BYTE_LEN, BCRYPT_USE_SYSTEM_PREFERRED_RNG))) {
             sqlite3_result_error(context, "[ULID_NEW] Internal error: failed to get random bytes", -1);
             return;
         }
