@@ -115,7 +115,7 @@ SQLite command line example:
 
 ```
 # Get extension from release (choose suitable version for your environment)
-wget https://github.com/tsujio/sqlite3-ulid/releases/download/v1.0.0/libsqlite-ulid-1.0.0-linux-x86_64.so -O libsqlite-ulid.so
+wget https://github.com/tsujio/sqlite3-ulid/releases/download/v1.1.0/libsqlite-ulid-1.1.0-linux-x86_64.so -O libsqlite-ulid.so
 
 # Start SQLite cli
 sqlite3 :memory:
@@ -129,12 +129,23 @@ sqlite> SELECT ULID_NEW();
 
 # Build
 
+Linux:
+
 ```
 git clone --recursive https://github.com/tsujio/sqlite3-ulid.git
 
 cd sqlite3-ulid
 
+# Create sqlite3 header files
+bash -c "cd sqlite && ./configure && make sqlite3.h sqlite3ext.h"
+
 make
+```
+
+Windows:
+
+```
+cl /I sqlite ulid.c Bcrypt.lib -link -dll -out:libsqlite-ulid.dll
 ```
 
 # References
