@@ -105,10 +105,7 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
             return;
         }
 #else
-        int i;
-        for (i = 0; i < RANDOMNESS_BYTE_LEN; i++) {
-            randomness[i] = rand() & 0xff;
-        }
+        sqlite3_randomness(RANDOMNESS_BYTE_LEN, randomness);
 #endif
     }
 
@@ -273,10 +270,6 @@ int sqlite3_extension_init(
     const sqlite3_api_routines *pApi
 ) {
     SQLITE_EXTENSION_INIT2(pApi);
-
-#if !defined(__linux__) && !defined(_WIN32) && !defined(_WIN64)
-    srand((unsigned int)time(NULL));
-#endif
 
     int res;
 
