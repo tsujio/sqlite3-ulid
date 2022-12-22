@@ -46,7 +46,11 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
     unsigned char randomness[RANDOMNESS_BYTE_LEN];
 
     if (argc > 0) {
-        if (sqlite3_value_type(argv[0]) != SQLITE_INTEGER) {
+        int type = sqlite3_value_type(argv[0]);
+        if (type == SQLITE_NULL) {
+            sqlite3_result_null(context);
+            return;
+        } else if (type != SQLITE_INTEGER) {
             sqlite3_result_error(context, "[ULID_NEW] INTEGER value expected for timestamp", -1);
             return;
         }
@@ -73,7 +77,11 @@ static void ulid_new(sqlite3_context *context, int argc, sqlite3_value **argv) {
     }
 
     if (argc > 1) {
-        if (sqlite3_value_type(argv[1]) != SQLITE_BLOB) {
+        int type = sqlite3_value_type(argv[1]);
+        if (type == SQLITE_NULL) {
+            sqlite3_result_null(context);
+            return;
+        } else if (type != SQLITE_BLOB) {
             sqlite3_result_error(context, "[ULID_NEW] BLOB value expected for randomness", -1);
             return;
         }
@@ -124,7 +132,11 @@ static void ulid_encode(sqlite3_context *context, int argc, sqlite3_value **argv
         return;
     }
 
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
+    int type = sqlite3_value_type(argv[0]);
+    if (type == SQLITE_NULL) {
+        sqlite3_result_null(context);
+        return;
+    } else if (type != SQLITE_BLOB) {
         sqlite3_result_error(context, "[ULID_ENCODE] BLOB value expected", -1);
         return;
     }
@@ -177,7 +189,11 @@ static void ulid_decode(sqlite3_context *context, int argc, sqlite3_value **argv
         return;
     }
 
-    if (sqlite3_value_type(argv[0]) != SQLITE_TEXT) {
+    int type = sqlite3_value_type(argv[0]);
+    if (type == SQLITE_NULL) {
+        sqlite3_result_null(context);
+        return;
+    } else if (type != SQLITE_TEXT) {
         sqlite3_result_error(context, "[ULID_DECODE] TEXT value expected", -1);
         return;
     }
@@ -220,7 +236,11 @@ static void ulid_to_timestamp(sqlite3_context *context, int argc, sqlite3_value 
         return;
     }
 
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
+    int type = sqlite3_value_type(argv[0]);
+    if (type == SQLITE_NULL) {
+        sqlite3_result_null(context);
+        return;
+    } else if (type != SQLITE_BLOB) {
         sqlite3_result_error(context, "[ULID_TO_TIMESTAMP] BLOB value expected", -1);
         return;
     }
