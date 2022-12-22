@@ -23,6 +23,7 @@ sqlite> WITH
 - [ULID_NEW](#ulid_new)
 - [ULID_ENCODE](#ulid_encode)
 - [ULID_DECODE](#ulid_decode)
+- [ULID_TO_TIMESTAMP](#ulid_to_timestamp)
 
 ## `ULID_NEW`
 
@@ -109,13 +110,38 @@ Example:
 SELECT ULID_DECODE('01GMSQJHVQ9JCDN0P4WXYQR5WC');
 ```
 
+## `ULID_TO_TIMESTAMP`
+
+Extract timestamp (unix epoch) from ulid
+
+Syntax:
+
+```
+ULID_TO_TIMESTAMP(BLOB ulid) => INTEGER
+```
+
+Parameters:
+
+- `ulid: BLOB`
+    - ULID value
+
+Returns:
+
+- Unix epoch in milliseconds
+
+Example:
+
+```
+SELECT DATETIME(ULID_TO_TIMESTAMP(ULID_DECODE('01GMW589NDC95JX9VEEBF7X882')) / 1000, 'unixepoch');
+```
+
 # Use extension
 
 SQLite command line example:
 
 ```
 # Get extension from release (choose suitable version for your environment)
-wget https://github.com/tsujio/sqlite3-ulid/releases/download/v1.1.0/libsqlite-ulid-1.1.0-linux-x86_64.so -O libsqlite-ulid.so
+wget https://github.com/tsujio/sqlite3-ulid/releases/download/v1.2.0/libsqlite-ulid-1.2.0-linux-x86_64.so -O libsqlite-ulid.so
 
 # Start SQLite cli
 sqlite3 :memory:
