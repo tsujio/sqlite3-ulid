@@ -224,7 +224,9 @@ int sqlite3_extension_init(
 ) {
     SQLITE_EXTENSION_INIT2(pApi);
 
+#if !defined(__linux__) && !defined(_WIN32) && !defined(_WIN64)
     srand((unsigned int)time(NULL));
+#endif
 
     int res;
 
