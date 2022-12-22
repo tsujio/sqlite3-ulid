@@ -214,6 +214,36 @@ static void ulid_decode(sqlite3_context *context, int argc, sqlite3_value **argv
     sqlite3_result_blob(context, result, ULID_BYTE_LEN, SQLITE_TRANSIENT);
 }
 
+static void ulid_to_timestamp(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    if (argc == 0) {
+        sqlite3_result_error(context, "[ULID_TO_TIMESTAMP] No argument", -1);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
+        sqlite3_result_error(context, "[ULID_TO_TIMESTAMP] BLOB value expected", -1);
+        return;
+    }
+
+    if (sqlite3_value_bytes(argv[0]) != ULID_BYTE_LEN) {
+        sqlite3_result_error(context, "[ULID_TO_TIMESTAMP] Invalid byte length", -1);
+        return;
+    }
+
+    const unsigned char *value = sqlite3_value_blob(argv[0]);
+
+    unsigned long long result = 0;
+
+    result += ((unsigned long long)value[0]) << 40;
+    result += ((unsigned long long)value[1]) << 32;
+    result += ((unsigned long long)value[2]) << 24;
+    result += ((unsigned long long)value[3]) << 16;
+    result += ((unsigned long long)value[4]) << 8;
+    result += ((unsigned long long)value[5]) << 0;
+
+    sqlite3_result_int64(context, result);
+}
+
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
@@ -245,6 +275,12 @@ int sqlite3_extension_init(
     res = sqlite3_create_function(db, "ulid_decode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, NULL, ulid_decode, NULL, NULL);
     if (res != SQLITE_OK) {
         *pzErrMsg = sqlite3_mprintf("Can't create ulid_decode function.");
+        return res;
+    }
+
+    res = sqlite3_create_function(db, "ulid_to_timestamp", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, NULL, ulid_to_timestamp, NULL, NULL);
+    if (res != SQLITE_OK) {
+        *pzErrMsg = sqlite3_mprintf("Can't create ulid_to_timestamp function.");
         return res;
     }
 
